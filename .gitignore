@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.cache/
+venv/
+.env
+*.db
+generated_reports/*
+data/*
+query_history.json
+.streamlit/

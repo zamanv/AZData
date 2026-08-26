@@ -1,0 +1,11 @@
+services:
+  azdata:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./generated_reports:/app/generated_reports
+      - ./data:/app/data
+    environment:
+      - STREAMLIT_SERVER_HEADLESS=true
+    restart: unless-stopped

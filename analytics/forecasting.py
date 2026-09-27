@@ -170,9 +170,16 @@ def run_arima_forecast(
         # Create time series
         ts = pd.Series(values.values, index=pd.DatetimeIndex(dates))
 
+        # statsmodels requires a "supported" index (regular frequency or
+        # integer). Dropping rows with missing values leaves gaps in the
+        # DatetimeIndex, which makes model.predict() raise "No supported index
+        # is available". Fit on a positional index and keep the real dates for
+        # labelling the output.
+        ts_fit = pd.Series(ts.to_numpy(), index=pd.RangeIndex(len(ts)))
+
         # Auto-fit ARIMA
         model = pm.auto_arima(
-            ts,
+            ts_fit,
             seasonal=False,
             stepwise=True,
             suppress_warnings=True,

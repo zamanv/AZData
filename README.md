@@ -1,5 +1,10 @@
 # AZData
 
+[![CI](https://github.com/zamanv/AZData/actions/workflows/ci.yml/badge.svg)](https://github.com/zamanv/AZData/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-260%20passing-brightgreen)](https://github.com/zamanv/AZData/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-3776AB)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 AI-powered offline data analytics platform. Upload a dataset, ask questions in plain English, and get insights, anomaly detection, forecasting, and reports — all processed locally with zero API keys.
 
 ## Features
@@ -67,10 +72,51 @@ AZData/
 ├── security/               # Code sandbox, encryption, SQL guard
 ├── reports/                # HTML/PDF report builder
 ├── utils/                  # Config, session manager
+├── tests/                  # pytest suite
 ├── requirements.txt
+├── requirements-dev.txt
+├── pytest.ini
 ├── Dockerfile
+├── .github/workflows/      # CI
 └── docker-compose.yml
 ```
+
+## Testing
+
+The suite covers the security, profiling, analytics, ingestion, and config
+modules. It needs no Ollama server and no network access.
+
+```bash
+pip install -r requirements-dev.txt
+pytest                                    # 260 tests
+pytest --cov=analytics --cov=ingestion \
+       --cov=profiling --cov=security \
+       --cov=utils --cov-report=term-missing
+```
+
+| Module | Coverage |
+| --- | --- |
+| `security/sql_guard.py` | 100% |
+| `security/crypto.py` | 100% |
+| `profiling/stats_generator.py` | 100% |
+| `analytics/anomaly_detector.py` | 100% |
+| `profiling/quality_scorer.py` | 99% |
+| `profiling/schema_detector.py` | 95% |
+| `analytics/forecasting.py` | 95% |
+| `ingestion/csv_loader.py` | 91% |
+| `security/sandbox.py` | 81% |
+
+A few tests are marked `xfail` to pin **known, deliberate limitations** rather
+than hide them. Run `pytest -rx` to list them. They currently cover:
+
+- **Sandbox timeout cannot interrupt GIL-holding code.** The limit is enforced
+  with `Thread.join(timeout=...)`, which cannot pre-empt a tight C-level loop.
+  Real containment needs a separate process, `RLIMIT_CPU`, or a container.
+- **`FORBIDDEN_NODE_TYPES` is not enforced.** `ASTVerifier` defines
+  `visit_AnyNode`, but `ast.NodeVisitor` dispatches on exact class names, so
+  that policy table never runs.
+- **An empty DataFrame scores 100/A** for data quality, which reads as
+  "pristine data" rather than "nothing to assess".
 
 ## Security
 

@@ -9,3 +9,9 @@ generated_reports/*
 data/*
 query_history.json
 .streamlit/
+
+# testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/

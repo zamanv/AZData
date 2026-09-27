@@ -61,11 +61,16 @@ def auto_detect_date_column(df: pd.DataFrame) -> Optional[Tuple[str, str]]:
         if pd.api.types.is_datetime64_any_dtype(df[col]):
             return col, _infer_freq(df[col])
 
-    # Try to parse object columns
+    # Try to parse text columns. object is the dtype for text on pandas < 3.0,
+    # but pandas 3.0+ infers StringDtype for pure-string columns.
     for col in df.columns:
-        if df[col].dtype == "object":
+        is_text_like = (
+            pd.api.types.is_object_dtype(df[col])
+            or pd.api.types.is_string_dtype(df[col])
+        )
+        if is_text_like:
             try:
-                parsed = pd.to_datetime(df[col], errors="coerce", infer_datetime_format=True)
+                parsed = pd.to_datetime(df[col], errors="coerce")
                 parse_rate = parsed.notna().mean()
                 if parse_rate > 0.8:
                     return col, _infer_freq(parsed.dropna())

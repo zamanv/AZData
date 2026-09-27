@@ -68,15 +68,25 @@ def _is_likely_datetime_column(col_name: str, sample: pd.Series) -> bool:
     if any(kw in name_lower for kw in DATE_KEYWORDS):
         return True
 
-    # Check if pandas can parse it
-    if sample.dtype == "object" and len(sample) > 0:
+    # Already parsed by pandas into a native datetime dtype
+    if pd.api.types.is_datetime64_any_dtype(sample):
+        return True
+
+    # Check if pandas can parse it. Note: object is the dtype for text on
+    # pandas < 3.0, but pandas 3.0+ infers StringDtype for pure-string
+    # columns, so both must be accepted here.
+    is_text_like = (
+        pd.api.types.is_object_dtype(sample)
+        or pd.api.types.is_string_dtype(sample)
+    )
+    if is_text_like and len(sample) > 0:
         non_null = sample.dropna().head(50)
         if len(non_null) == 0:
             return False
 
         # Try pandas datetime conversion
         try:
-            pd.to_datetime(non_null, infer_datetime_format=True, errors="raise")
+            pd.to_datetime(non_null, errors="raise")
             return True
         except (ValueError, TypeError):
             pass
@@ -243,12 +253,16 @@ def detect_date_columns(df: pd.DataFrame) -> List[Tuple[str, int]]:
     results: List[Tuple[str, int]] = []
 
     for col in df.columns:
-        if df[col].dtype == "object":
+        is_text_like = (
+            pd.api.types.is_object_dtype(df[col])
+            or pd.api.types.is_string_dtype(df[col])
+        )
+        if is_text_like:
             try:
-                parsed = pd.to_datetime(df[col], errors="coerce", infer_datetime_format=True)
+                parsed = pd.to_datetime(df[col], errors="coerce")
                 parse_rate = parsed.notna().mean()
                 if parse_rate > 0.8:
-                    results.append((col, parse_rate))
+                    results.append((col, float(parse_rate)))
             except Exception:
                 pass
         elif pd.api.types.is_datetime64_any_dtype(df[col]):

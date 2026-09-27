@@ -1,0 +1,7 @@
+# Development and CI dependencies for AZData.
+# Runtime dependencies live in requirements.txt.
+
+-r requirements.txt
+
+pytest>=8.0
+pytest-cov>=5.0

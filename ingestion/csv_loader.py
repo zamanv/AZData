@@ -119,7 +119,6 @@ def load_csv(
             sep=delimiter,
             nrows=nrows,
             on_bad_lines="warn",
-            low_memory=False,
             engine="python",
         )
 
@@ -133,7 +132,6 @@ def load_csv(
                 encoding=encoding,
                 sep=delimiter,
                 on_bad_lines="warn",
-                low_memory=False,
                 engine="python",
             )
 
@@ -216,7 +214,6 @@ def load_csv_from_bytes(
             sep=delimiter,
             nrows=nrows,
             on_bad_lines="warn",
-            low_memory=False,
             engine="python",
         )
 
